@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 
 const formSchema = z
   .object({
@@ -50,6 +51,7 @@ const SignUpView = () => {
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     setError(null);
+    setPending(true);
 
     authClient.signUp.email(
       {
@@ -58,9 +60,28 @@ const SignUpView = () => {
         password: data.password,
       },
       {
-        onRequest: () => {
-          setPending(true);
+        onSuccess: () => {
+          setPending(false);
+          router.push("/");
         },
+        onError: (error) => {
+          setPending(false);
+          setError(error.error.message);
+        },
+      }
+    );
+  };
+
+  const onSocial = (provider: "github" | "google") => {
+    setError(null);
+    setPending(true);
+
+    authClient.signIn.social(
+      {
+        provider: provider,
+        callbackURL: "/",
+      },
+      {
         onSuccess: () => {
           setPending(false);
           router.push("/");
@@ -182,16 +203,18 @@ const SignUpView = () => {
                     type="button"
                     variant={"outline"}
                     className="w-full"
+                    onClick={() => onSocial("google")}
                   >
-                    Google
+                    <FaGoogle />
                   </Button>
                   <Button
                     disabled={pending}
                     type="button"
                     variant={"outline"}
                     className="w-full"
+                    onClick={() => onSocial("github")}
                   >
-                    Github
+                    <FaGithub />
                   </Button>
                 </div>
                 <div className="text-center text-sm">
